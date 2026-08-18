@@ -35,6 +35,7 @@ USDT_ADDRESS = "0xb9784568555cd9b7b79178905e5581a0fde55e71"
 # -------------------------------------------------
 
 bot = telebot.TeleBot(BOT_TOKEN)
+bot.remove_webhook()
 waiting_screenshot = set()
 
 def send_safe_photo(chat_id, photo_url, caption, reply_markup=None):
