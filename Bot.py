@@ -21,13 +21,12 @@ def keep_alive():
 # -----------------------------------------------------------
 
 # ----------------- CONFIGURATION -----------------
-# 1st Bot Token
-BOT_TOKEN = "YAHAN_1ST_BOT_TOKEN_DAALEIN"
+BOT_TOKEN = "8818467580:AAFz2hh4jzkXDcbG1OkSyeWrIqeo2F24B8Q"
 ADMIN_ID = 8800158361
 
 # Channel Links
 MAIN_CHANNEL_LINK = "https://t.me/Bl4ck_hamster"
-PRIVATE_CHANNEL_LINK = "https://t.me/+c_tXyHANcaczZWE9"  # Aapka Private Group/Channel Link
+PRIVATE_CHANNEL_LINK = "https://t.me/+c_tXyHANcaczZWE9"
 DEMO_VIDEO_LINK = "https://t.me/shjahshsbsb/10"
 
 # Photos ke link
@@ -193,7 +192,7 @@ def handle_payment_photo(message):
     else:
         bot.reply_to(message, "Pehle /start karke payment method select karein.")
 
-# 6. Admin Approval / Rejection Trigger (UPDATED LINKS & BUTTON)
+# 6. Admin Approval / Rejection Trigger
 @bot.callback_query_handler(func=lambda call: call.data.startswith(("app_", "rej_")))
 def handle_admin_action(call):
     if call.from_user.id != ADMIN_ID:
@@ -206,10 +205,8 @@ def handle_admin_action(call):
     if action == "app":
         try:
             join_btn = types.InlineKeyboardMarkup()
-            # Button me public main channel link
             join_btn.add(types.InlineKeyboardButton("📢 Main Channel", url=MAIN_CHANNEL_LINK))
             
-            # Message body me Private channel invite link
             bot.send_message(
                 target_user_id,
                 f"🎉 *Payment Verified!*\n\nAapka Private Access Link:\n{PRIVATE_CHANNEL_LINK}",
