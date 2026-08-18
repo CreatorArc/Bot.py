@@ -21,7 +21,7 @@ def keep_alive():
 # -----------------------------------------------------------
 
 # ----------------- CONFIGURATION -----------------
-BOT_TOKEN = "8818467580:AAFz2hh4jzkXDcbG1OkSyeWrIqeo2F24B8Q"
+BOT_TOKEN = "8818467580:AAEDJPd20gPQHULPXDex_NBH6p-giiDXU1g"
 ADMIN_ID = 8800158361
 
 # Channel Links
