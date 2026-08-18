@@ -38,6 +38,129 @@ bot = telebot.TeleBot(BOT_TOKEN)
 bot.remove_webhook()
 waiting_screenshot = set()
 
+# User ID save karne ke liye helper function
+def add_user(user_id):
+    if not os.path.exists("users.txt"):
+        with open("users.txt", "w") as f: f.write("")
+    with open("users.txt", "r") as f:
+        users = f.read().splitlines()
+    if str(user_id) not in users:
+        with open("users.txt", "a") as f:
+            f.write(str(user_id) + "\n")
+
+def send_safe_photo(chat_id, photo_url, caption, reply_markup=None):
+    try:
+        bot.send_photo(chat_id, photo=photo_url, caption=caption, parse_mode="Markdown", reply_markup=reply_markup)
+    except Exception:
+        bot.send_message(chat_id, f"{caption}\n\n🖼️ [View Image / QR Code]({photo_url})", parse_mode="Markdown", reply_markup=reply_markup)
+
+# 1. /start command
+@bot.message_handler(commands=['start'])
+def start_command(message):
+    add_user(message.chat.id) # User save ho gaya
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    btn_inr = types.InlineKeyboardButton("🇮🇳 Buy Premium (INR)", callback_data="pay_inr")
+    btn_usd = types.InlineKeyboardButton("💵 Buy Premium ($)", callback_data="pay_usd")
+    btn_channel = types.InlineKeyboardButton("📢 Main Channel", url=GROUP_INVITE_LINK)
+    markup.add(btn_inr, btn_usd)
+    markup.add(btn_channel)
+
+    welcome_text = (
+        "Black Hamster premium bot is ready to serve you!\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🎬 *What You Get:*\n\n"
+        "• 🔥 Unlimited direct Premium Videos here\n"
+        "• ⚡ Viral famous video\n"
+        "• 🔐 Secure & 🌚\n"
+        "• 59₹ Premium pack 999+ video\n"
+        "• 89₹ animal pack 1500+ video\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "meow 😻 gop gop\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "👇 Click below button to Get Premium 📷"
+    )
+    send_safe_photo(message.chat.id, WELCOME_PHOTO_URL, welcome_text, markup)
+
+# Broadcast Command
+@bot.message_handler(commands=['broadcast'])
+def broadcast(message):
+    if message.from_user.id != ADMIN_ID: return
+    text = message.text.replace("/broadcast ", "")
+    if not os.path.exists("users.txt"):
+        bot.reply_to(message, "Koi user abhi tak nahi hai.")
+        return
+    with open("users.txt", "r") as f:
+        users = f.read().splitlines()
+    count = 0
+    for user_id in users:
+        try:
+            bot.send_message(user_id, text)
+            count += 1
+        except: pass
+    bot.reply_to(message, f"Broadcast successfully sent to {count} users!")
+
+# ... (baaki payment handlers wahi purane wale hain) ...
+# INR, USD, Screenshot aur Admin handlers niche continue karein...
+
+@bot.callback_query_handler(func=lambda call: call.data == "pay_inr")
+def process_inr(call):
+    markup = types.InlineKeyboardMarkup()
+    btn_upload = types.InlineKeyboardButton("📤 Send Payment Screenshot", callback_data="upload_proof")
+    markup.add(btn_upload)
+    inr_text = ("🇮🇳 *INR Payment Details:*\n\n💰 Pay 59₹ to get Premium 999+ Videos\n\n🐾 Pay 89₹ to get Animal Pack 1500+ Videos\n\n" f"💳 *UPI ID:* `{UPI_ID}`\n(Tap to copy)\n\n" "📌 *Steps:*\n1. Exact amount send karein.\n2. Screenshot bhejein.")
+    send_safe_photo(call.message.chat.id, UPI_QR_PHOTO_URL, inr_text, markup)
+    bot.answer_callback_query(call.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "pay_usd")
+def process_usd(call):
+    markup = types.InlineKeyboardMarkup()
+    btn_upload = types.InlineKeyboardButton("📤 Send Payment Screenshot", callback_data="upload_proof")
+    markup.add(btn_upload)
+    usd_text = ("💵 *Crypto / USDT Payment Details:*\n\n💰 *Amount:* 1 USDT (BEP20)\n" f"📫 *Address:* `{USDT_ADDRESS}`\n\n📌 *Steps:*\n1. Exact 1 USDT bhejein.\n2. Screenshot bhejein.")
+    send_safe_photo(call.message.chat.id, USDT_QR_PHOTO_URL, usd_text, markup)
+    bot.answer_callback_query(call.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "upload_proof")
+def ask_proof(call):
+    waiting_screenshot.add(call.from_user.id)
+    bot.send_message(call.message.chat.id, "Kripya apne payment ka screenshot yahan send karein 👇")
+    bot.answer_callback_query(call.id)
+
+@bot.message_handler(content_types=['photo'])
+def handle_payment_photo(message):
+    user_id = message.chat.id
+    if user_id in waiting_screenshot:
+        waiting_screenshot.remove(user_id)
+        admin_markup = types.InlineKeyboardMarkup()
+        btn_approve = types.InlineKeyboardButton("Approve ✅", callback_data=f"app_{user_id}")
+        btn_reject = types.InlineKeyboardButton("Reject ❌", callback_data=f"rej_{user_id}")
+        admin_markup.row(btn_approve, btn_reject)
+        caption = f"🔔 *New Payment Submission!*\nUser ID: `{user_id}`"
+        bot.send_photo(ADMIN_ID, message.photo[-1].file_id, caption=caption, parse_mode="Markdown", reply_markup=admin_markup)
+        bot.reply_to(message, "⏳ Screenshot received! Verification ke baad link isi chat me aa jayega.")
+    else: bot.reply_to(message, "Pehle /start karke payment method select karein.")
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith(("app_", "rej_")))
+def handle_admin_action(call):
+    if call.from_user.id != ADMIN_ID: return
+    action, target_user_id = call.data.split("_")
+    target_user_id = int(target_user_id)
+    if action == "app":
+        bot.send_message(target_user_id, f"🎉 *Payment Verified!*\n\nAapka Private Access Link: {GROUP_INVITE_LINK}", parse_mode="Markdown")
+        bot.edit_message_caption(caption=call.message.caption + "\n\n**Status: Approved ✅**", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
+        bot.answer_callback_query(call.id, "Approved!")
+    elif action == "rej":
+        bot.send_message(target_user_id, "❌ Aapka payment reject ho gaya hai.")
+        bot.edit_message_caption(caption=call.message.caption + "\n\n**Status: Rejected ❌**", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode="Markdown")
+        bot.answer_callback_query(call.id, "Rejected!")
+
+if __name__ == '__main__':
+    keep_alive()
+    bot.infinity_polling()
+bot = telebot.TeleBot(BOT_TOKEN)
+bot.remove_webhook()
+waiting_screenshot = set()
+
 def send_safe_photo(chat_id, photo_url, caption, reply_markup=None):
     try:
         bot.send_photo(
