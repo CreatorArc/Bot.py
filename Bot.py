@@ -21,7 +21,7 @@ def keep_alive():
 # -----------------------------------------------------------
 
 # ----------------- CONFIGURATION -----------------
-BOT_TOKEN = "8910296599:AAEV4-kVj3eUAzWlclDQzdpLQCSy40qSbqA"
+BOT_TOKEN = "8818467580:AAFz2hh4jzkXDcbG1OkSyeWrIqeo2F24B8Q"
 ADMIN_ID = 8800158361
 GROUP_INVITE_LINK = "https://t.me/+YourPrivateGroupLink"
 
