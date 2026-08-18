@@ -192,7 +192,7 @@ def handle_payment_photo(message):
     else:
         bot.reply_to(message, "Pehle /start karke payment method select karein.")
 
-# 6. Admin Approval / Rejection Trigger
+# 6. Admin Approval / Rejection Trigger (FIXED HTML FORMATTING)
 @bot.callback_query_handler(func=lambda call: call.data.startswith(("app_", "rej_")))
 def handle_admin_action(call):
     if call.from_user.id != ADMIN_ID:
@@ -207,14 +207,16 @@ def handle_admin_action(call):
             join_btn = types.InlineKeyboardMarkup()
             join_btn.add(types.InlineKeyboardButton("📢 Main Channel", url=MAIN_CHANNEL_LINK))
             
+            # HTML format avoids link breakage
+            success_msg = f"🎉 <b>Payment Verified!</b>\n\nAapka Private Access Link:\n{PRIVATE_CHANNEL_LINK}"
             bot.send_message(
                 target_user_id,
-                f"🎉 *Payment Verified!*\n\nAapka Private Access Link:\n{PRIVATE_CHANNEL_LINK}",
-                parse_mode="Markdown",
+                success_msg,
+                parse_mode="HTML",
                 reply_markup=join_btn
             )
         except Exception as e:
-            print(f"Error sending link to user: {e}")
+            print(f"Error sending link: {e}")
 
         try:
             bot.edit_message_caption(
