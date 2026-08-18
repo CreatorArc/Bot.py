@@ -26,8 +26,7 @@ ADMIN_ID = 8800158361
 
 # Channel Links
 MAIN_CHANNEL_LINK = "https://t.me/Bl4ck_hamster"
-PRIVATE_CHANNEL_LINK = "https://t.me/+c_tXyHANcaczZWE9"
-DEMO_VIDEO_LINK = "https://t.me/shjahshsbsb/10"
+PRIVATE_CHANNEL_LINK = "https://t.me/+znsMhMqCxBhiNjY9"  # Updated Private Link
 
 # Photos ke link
 WELCOME_PHOTO_URL = "https://t.me/shjahshsbsb/4"
@@ -72,7 +71,7 @@ def send_safe_photo(chat_id, photo_url, caption, reply_markup=None):
             reply_markup=reply_markup
         )
 
-# 1. /start command
+# 1. /start command (Demo Video Button Removed)
 @bot.message_handler(commands=['start'])
 def start_command(message):
     add_user(message.chat.id)
@@ -81,11 +80,9 @@ def start_command(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
     btn_inr = types.InlineKeyboardButton("🖼️ Buy Access (₹)", callback_data="pay_inr")
     btn_usd = types.InlineKeyboardButton("🖼️ Buy Access ($)", callback_data="pay_usd")
-    btn_demo = types.InlineKeyboardButton("📺 Demo video", url=DEMO_VIDEO_LINK)
     btn_channel = types.InlineKeyboardButton("📢 Main Channel", url=MAIN_CHANNEL_LINK)
     
     markup.add(btn_inr, btn_usd)
-    markup.add(btn_demo)
     markup.add(btn_channel)
 
     welcome_text = (
@@ -192,7 +189,7 @@ def handle_payment_photo(message):
     else:
         bot.reply_to(message, "Pehle /start karke payment method select karein.")
 
-# 6. Admin Approval / Rejection Trigger (FIXED HTML FORMATTING)
+# 6. Admin Approval / Rejection Trigger
 @bot.callback_query_handler(func=lambda call: call.data.startswith(("app_", "rej_")))
 def handle_admin_action(call):
     if call.from_user.id != ADMIN_ID:
@@ -207,16 +204,13 @@ def handle_admin_action(call):
             join_btn = types.InlineKeyboardMarkup()
             join_btn.add(types.InlineKeyboardButton("📢 Main Channel", url=MAIN_CHANNEL_LINK))
             
-            # HTML format avoids link breakage
-            success_msg = f"🎉 <b>Payment Verified!</b>\n\nAapka Private Access Link:\n{PRIVATE_CHANNEL_LINK}"
-            bot.send_message(
-                target_user_id,
-                success_msg,
-                parse_mode="HTML",
-                reply_markup=join_btn
+            msg = (
+                "🎉 Payment Verified!\n\n"
+                f"Aapka Private Access Link:\n{PRIVATE_CHANNEL_LINK}"
             )
+            bot.send_message(target_user_id, msg, reply_markup=join_btn)
         except Exception as e:
-            print(f"Error sending link: {e}")
+            print(f"Error sending link to user: {e}")
 
         try:
             bot.edit_message_caption(
